@@ -7,45 +7,64 @@
  * @link http://chenshengzhi.com
  */
 
+
+/** 项目地址 */
+$_online_url = 'https://codeload.github.com/chanshengzhi/UEditor-for-Typecho/zip/master';
+
+/** 下载到本地的文件名称 */
+$_local_file = 'ueditor.zip';
+
 // 如果接收到?delete参数 则删除自身
-if( isset($_GET['delete']) ) {
-	unlink('README.md');
-	unlink(__FILE__);
+if( isset($_GET['delete']) && $_GET['delete'] == 999 ) {
+	unlink('./README.md');
+	unlink('./'. $_local_file);
+	unlink($_SERVER['SCRIPT_FILENAME']);
+	exit;
 }
 
 
-/** 项目地址 */
-$zip_pack = 'https://github.com/chanshengzhi/UEditor-for-Typecho/archive/master.zip';
-
-/** 下载到本地的文件名称 */
-$file_name = 'ueditor-for-typecho.zip';
-
-
 try {
-	if( ! class_exists('ZipArchive') ) {
-		throw new Exception('未启用ZipArchive');
+	// 下载安装包
+	$file_content = file_get_contents($_online_url);
+	if( ! $file_content ) {
+		throw new Exception('无法下载');
 	}
 	
-	if( ! $file_content = file_get_contents($zip_pack) ) {
-		throw new Exception('无法下载zip安装包');
+	if( ! file_put_contents($_local_file, $file_content) ) {
+		throw new Exception('无法保存为本地文件');
 	}
 	
-	if( ! file_put_contents($file_name, $file_content) ) {
-		throw new Exception('无法保存下载的安装包');
-	}
-	
+	// 解压
 	$zip = new ZipArchive();
-	if( $zip->open($file_name) === TRUE ) {
-		$zip->extractTo('.');
+	if( TRUE === $zip->open($_local_file) ) {
+		$zip->extractTo('./');
 		$zip->close();
 	} else {
-		throw new Exception('无法打开zip压缩包');
+		throw new Exception('无法解压');
+	}
+	
+	// 移除子文件夹
+	$dir = "./UEditor-for-Typecho-master/";
+	if (is_dir($dir)) {
+		if ($dh = opendir($dir)) {
+			while (($currfile = readdir($dh)) !== false) {
+				if ($currfile!="." && $currfile!="..") {
+					if (!file_exists("./".$currfile)) {
+						rename($dir.$currfile, "./".$currfile);
+					}
+				}
+			}
+			closedir($dh);
+		}
+		rmdir($dir);
+	} else {
+		throw new Exception('压缩包数据有误');
 	}
 	
 	// 收尾工作
-	header('Content-type:text/html;charset="utf-8"');
-	echo '<a href="/usr/ueditor.install.php?delete">删除安装文件</a>';
+	header('Content-type:text/html;chatset="utf-8"');
+	echo '<a href="?delete=999">删除安装文件</a>';
 	
-} catch(Exception $e) {
+} catch (Exception $e) {
 	echo $e->getMessage();
 }
