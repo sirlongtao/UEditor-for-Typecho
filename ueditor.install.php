@@ -56,6 +56,7 @@ try {
 			}
 			closedir($dh);
 		}
+		unlink($dir. 'ueditor.install.php');
 		rmdir($dir);
 	} else {
 		throw new Exception('压缩包数据有误');
