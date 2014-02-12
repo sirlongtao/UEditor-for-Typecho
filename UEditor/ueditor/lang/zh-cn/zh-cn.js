@@ -400,7 +400,7 @@ UE.I18N['zh-cn'] = {
             'lang_input_about':'关于UEditor',
             'lang_input_shortcuts':'快捷键',
             'lang_input_version':'版本:1.3.6',
-            'lang_input_introduction':'适用于Typecho的UEditor, <a href="http://github.com/chanshengzhi.com/UEditor-for-Typecho" target="_blank">项目地址</a>, <a href="http://chenshengzhi.com" target="_blank">作者博客</a>, <a href="http://ueditor.baidu.com" target="_blank">UEditor官网</a>',
+            'lang_input_introduction':'适用于Typecho的UEditor, 访问http://chenshengzhi.com了解更多',
             'lang_Txt_shortcuts':'快捷键',
             'lang_Txt_func':'功能',
             'lang_Txt_bold':'给选中字设置为加粗',
