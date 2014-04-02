@@ -61,8 +61,10 @@ try {
 	}
 	
 	// 如果已经存在UEditor文件夹,则删除
-	if( !unlink_dir('./UEditor')) {
-		throw new Exception('旧的UEditor文件夹无法删除,请手动删除后重新安装');
+	if( is_dir('./UEditor') ) {
+		if( !unlink_dir('./UEditor')) {
+			throw new Exception('旧的UEditor文件夹无法删除,请手动删除后重新安装');
+		}
 	}
 	
 	// 解压

@@ -4,7 +4,7 @@
  * 
  * @package UEditor
  * @author ChenShengzhi
- * @version 1.3.6。1
+ * @version 1.3.6.1
  * @link http://chenshengzhi.com
  * @date 2014-04-02 17:31:13
  */
