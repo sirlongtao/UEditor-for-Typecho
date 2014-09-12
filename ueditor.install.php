@@ -22,7 +22,7 @@ if( isset($_GET['delete']) ) {
 	unlink('./README.md');
 	unlink('./'. $_local_file);
 	unlink($_SERVER['SCRIPT_FILENAME']);
-	exit('已经删除安装文件, 请进入插件管理界面启用.');
+	exit('已经删除安装文件, 请进入插件管理界面启用.<br><a href="/">返回主页</a>');
 }
 
 /**
@@ -91,7 +91,7 @@ try {
 		}
 		if( ! unlink_dir($dir) ) {
 			$dir = trim($dir, './');
-			throw new Exception('安装成功,但'. $dir. '文件夹未被删除,请进入/usr/plugins/目录手动删除'. $dir. '文件夹');
+			throw new Exception('安装成功,但'. $dir. '文件夹未被删除,请进入/usr/plugins/目录手动删除'. $dir. '文件夹<br>');
 		}
 	} else {
 		throw new Exception('压缩包数据有误');
