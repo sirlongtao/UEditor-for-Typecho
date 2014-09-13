@@ -1,11 +1,6 @@
 <?php
 require 'upyun.class.php';
 
-$_upyun_bucket = '';
-$_upyun_user = '';
-$_upyun_password = '';
-$_upyun_ed = 'http://'. $_upyun_bucket. '.b0.upaiyun.com';
-
 /**
  * Created by JetBrains PhpStorm.
  * User: taoqili
@@ -15,6 +10,11 @@ $_upyun_ed = 'http://'. $_upyun_bucket. '.b0.upaiyun.com';
  */
 class Uploader
 {
+    private $upyun_bucket = '';
+    private $upyun_user = '';
+    private $upyun_password = '';
+    private $upyun_url = '';
+
     private $fileField; //文件域名
     private $file; //文件上传对象
     private $base64; //文件上传对象
@@ -69,6 +69,34 @@ class Uploader
         }
 
         $this->stateMap['ERROR_TYPE_NOT_ALLOWED'] = iconv('unicode', 'utf-8', $this->stateMap['ERROR_TYPE_NOT_ALLOWED']);
+    }
+
+    private function upload2upyun($file, $fileName)
+    {
+        // 上传到upyun
+        $upyun = new UpYun($this->upyun_bucket, $this->upyun_user, $this->upyun_password);
+
+        try
+        {
+            $fn = fopen($file, 'rb');
+            $rsp = $upyun->writeFile($fileName, $fn, True);
+            fclose($fn);
+
+            if( $rsp )
+            {
+                $this->stateInfo = $this->stateMap[0];
+            }
+            else
+            {
+                $this->stateInfo = $this->getStateInfo("ERROR_UPYUN");
+                return false;
+            }
+        }
+        catch (Exception $e)
+        {
+            $this->stateInfo = $this->getCode();
+            return false;
+        }
     }
 
     /**
@@ -351,43 +379,12 @@ class Uploader
     {
         return array(
             "state" => $this->stateInfo,
-            "url" => $_upyun_ed. $this->fullName,
+            "url" => $this->upyun_url. $this->fullName,
             "title" => $this->fileName,
             "original" => $this->oriName,
             "type" => $this->fileType,
             "size" => $this->fileSize
         );
-    }
-
-    /**
-     * 上传到又拍云
-     */
-    public function upload2upyun($file, $fileName)
-    {
-        // 上传到upyun
-        $upyun = new UpYun($_upyun_bucket, $_upyun_user, $_upyun_password);
-
-        try
-        {
-            $fn = fopen($this->filePath, 'rb');
-            $rsp = $upyun->writeFile($this->fullName, $fn, True);
-            fclose($fn);
-
-            if( $rsp )
-            {
-                $this->stateInfo = $this->stateMap[0];
-            }
-            else
-            {
-                $this->stateInfo = $this->getStateInfo("ERROR_UPYUN");
-                return false;
-            }
-        }
-        catch (Exception $e)
-        {
-            $this->stateInfo = $this->getCode();
-            return false;
-        }
     }
 
 }
