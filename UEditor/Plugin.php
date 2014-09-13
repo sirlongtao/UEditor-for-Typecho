@@ -1,12 +1,12 @@
 <?php
 /**
- * 为Typecho启用UEditor编辑器
+ * 为Typecho启用UEditor编辑器(UPYUN版本)
  * 
  * @package UEditor
  * @author 陈盛智
  * @version 1.4.3
  * @link http://chenshengzhi.com
- * @date 2014-9-12 8:59:54
+ * @date 2014-9-13 22:00:03
  */
 class UEditor_Plugin implements Typecho_Plugin_Interface
 {
