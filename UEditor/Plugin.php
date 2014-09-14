@@ -4,9 +4,9 @@
  * 
  * @package UEditor
  * @author 陈盛智
- * @version 1.4.3
+ * @version 1.4.3.1
  * @link http://chenshengzhi.com
- * @date 2014-9-13 22:00:03
+ * @date 2014-9-14 22:26:55
  */
 class UEditor_Plugin implements Typecho_Plugin_Interface
 {
