@@ -45,7 +45,27 @@ class UEditor_Plugin implements Typecho_Plugin_Interface
      * @param Typecho_Widget_Helper_Form $form 配置面板
      * @return void
      */
-    public static function config(Typecho_Widget_Helper_Form $form){}
+    public static function config(Typecho_Widget_Helper_Form $form){
+        /** 使用UPYUN */
+        $c1 = new Typecho_Widget_Helper_Form_Element_Radio('upyun', array('0' => '不使用', '1' => '使用'), '0',
+            '是否使用UPYUN', '开启后会把图片和文件上传到UPYUN服务器上');
+        $form->addInput($c1);
+
+        $c1 = new Typecho_Widget_Helper_Form_Element_Text('upyun_url', NULL, NULL, '空间地址', '大概是这样的:http://bucket.b0.upaiyun.com');
+        $form->addInput($c1);
+        
+        $c1 = new Typecho_Widget_Helper_Form_Element_Text('upyun_bucket', NULL, NULL, '空间名称', '例如bucket');
+        $form->addInput($c1);
+
+        $c1 = new Typecho_Widget_Helper_Form_Element_Text('upyun_user', NULL, NULL, '操作员', '操作员名称');
+        $form->addInput($c1);
+
+        $c1 = new Typecho_Widget_Helper_Form_Element_Password('upyun_password', NULL, NULL, '操作员密码', '小心站你后面的物体');
+        $form->addInput($c1);
+
+        $c1 = new Typecho_Widget_Helper_Form_Element_Checkbox('upyun_is_image', array('upyun_is_image' => '这是一个图片空间'), array('upyun_is_image'), '是否图片空间', '如果勾选，则只把图片文件上传到UPYUN，其他文件上传到此服务器');
+        $form->addInput($c1);
+    }
     
     /**
      * 个人用户的配置面板

@@ -1,6 +1,6 @@
 <?php
+require_once '../../../../../config.inc.php';
 require 'upyun.class.php';
-
 /**
  * Created by JetBrains PhpStorm.
  * User: taoqili
@@ -10,11 +10,6 @@ require 'upyun.class.php';
  */
 class Uploader
 {
-    private $upyun_bucket = '';
-    private $upyun_user = '';
-    private $upyun_password = '';
-    private $upyun_url = '';
-
     private $fileField; //文件域名
     private $file; //文件上传对象
     private $base64; //文件上传对象
@@ -74,7 +69,7 @@ class Uploader
     private function upload2upyun($file, $fileName)
     {
         // 上传到upyun
-        $upyun = new UpYun($this->upyun_bucket, $this->upyun_user, $this->upyun_password);
+        $upyun = new UpYun(Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_bucket, Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_user, Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_password);
 
         try
         {
@@ -159,7 +154,10 @@ class Uploader
             $this->stateInfo = $this->stateMap[0];
         }
 
-        $this->upload2upyun($this->filePath, $this->fullName);
+        if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+        {
+            $this->upload2upyun($this->filePath, $this->fullName);
+        }
     }
 
     /**
@@ -201,7 +199,10 @@ class Uploader
             $this->stateInfo = $this->stateMap[0];
         }
 
-        $this->upload2upyun($this->filePath, $this->fullName);
+        if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+        {
+            $this->upload2upyun($this->filePath, $this->fullName);
+        }
     }
 
     /**
@@ -273,7 +274,10 @@ class Uploader
             $this->stateInfo = $this->stateMap[0];
         }
 
-        $this->upload2upyun($this->filePath, $this->fullName);
+        if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+        {
+            $this->upload2upyun($this->filePath, $this->fullName);
+        }
     }
 
     /**
@@ -377,14 +381,20 @@ class Uploader
      */
     public function getFileInfo()
     {
-        return array(
+        $a = array(
             "state" => $this->stateInfo,
-            "url" => $this->upyun_url. $this->fullName,
+            "url" => $this->fullName,
             "title" => $this->fileName,
             "original" => $this->oriName,
             "type" => $this->fileType,
             "size" => $this->fileSize
         );
+        
+        if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+        {
+            $a['url'] = Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_url. $this->fullName;
+        }
+        return $a;
     }
 
 }

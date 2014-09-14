@@ -3,6 +3,8 @@ UEditor-for-Typecho
 
 适用于Typecho 1.0/0.9/0.8版本，UEditor内核已升级到1.4.3版本。
 
+**2014-9-14 22:03:30：可配合UPYUN使用**
+
 ## 需要注意
 1. 要求typecho安装在网站根目录下，即usr目录是在网站根目录下。 安装在其他目录时可能无法正常使用，需要对UEditor配置进行修改，请恕我无暇顾及。
 2. 启用此插件后无法使用Typecho自带的文件上传和管理功能。
@@ -21,4 +23,4 @@ UEditor-for-Typecho
 在本项目的Github主页上下载zip格式的压缩包，解压上传UEditor文件夹到/usr/plugins文件夹下，进入Typecho插件管理界面启用即可。
 
 ##联系作者
-你可以在[我的博客](http://chenshengzhi.com)中找到我的联系方式。
+你可以在[陈盛智的个人站点](http://chenshengzhi.com)中找到我的联系方式。
