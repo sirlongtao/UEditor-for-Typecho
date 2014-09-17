@@ -46,7 +46,7 @@ $response->setContentType('text/javascript');
             'directionalityltr', 'directionalityrtl', 'indent', '|',
             'justifyleft', 'justifycenter', 'justifyright', 'justifyjustify', '|', 'touppercase', 'tolowercase', '|',
             'link', 'unlink', 'anchor', '|', 'imagenone', 'imageleft', 'imageright', 'imagecenter', '|',
-            'simpleupload', 'insertimage', 'emotion', 'scrawl', 'insertvideo', 'attachment', 'map', 'gmap', 'insertframe', 'insertcode', 'pagebreak', '|',
+            'simpleupload', 'insertimage', 'emotion', 'scrawl', 'insertvideo', 'attachment', 'map', 'gmap', 'insertframe', 'insertcode', '|',
             'horizontal', 'date', 'time', 'spechars', 'wordimage', '|',
             'inserttable', 'deletetable', 'insertparagraphbeforetable', 'insertrow', 'deleterow', 'insertcol', 'deletecol', 'mergecells', 'mergeright', 'mergedown', 'splittocells', 'splittorows', 'splittocols', 'charts', '|',
             'print', 'preview', 'searchreplace', 'help', 'drafts'
@@ -300,7 +300,7 @@ $response->setContentType('text/javascript');
 
         //pageBreakTag
         //分页标识符,默认是_ueditor_page_break_tag_
-        ,pageBreakTag:'<!--more-->'
+        //,pageBreakTag:'<!--more-->'
 
         //autotypeset
         //自动排版参数
