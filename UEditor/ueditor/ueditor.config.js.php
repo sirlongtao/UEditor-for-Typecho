@@ -300,7 +300,7 @@ $response->setContentType('text/javascript');
 
         //pageBreakTag
         //分页标识符,默认是_ueditor_page_break_tag_
-        //,pageBreakTag:'_ueditor_page_break_tag_'
+        ,pageBreakTag:'<!--more-->'
 
         //autotypeset
         //自动排版参数
