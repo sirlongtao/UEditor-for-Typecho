@@ -4,7 +4,7 @@
  * 
  * @package UEditor
  * @author 陈盛智
- * @version 1.4.3.1
+ * @version 1.4.3.2
  * @link http://chenshengzhi.com
  * @date 2014-9-14 22:26:55
  */
