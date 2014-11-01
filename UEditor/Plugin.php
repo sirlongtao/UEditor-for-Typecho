@@ -63,6 +63,9 @@ class UEditor_Plugin implements Typecho_Plugin_Interface
         $c1 = new Typecho_Widget_Helper_Form_Element_Password('upyun_password', NULL, NULL, '操作员密码', '小心站你后面的物体');
         $form->addInput($c1);
 
+        $c1 = new Typecho_Widget_Helper_Form_Element_Text('upyun_suffix', NULL, NULL, '缩略图版本', '在图片地址后添加的内容,例如 !default');
+        $form->addInput($c1);
+
         $c1 = new Typecho_Widget_Helper_Form_Element_Checkbox('upyun_is_image', array('upyun_is_image' => '这是一个图片空间'), array('upyun_is_image'), '是否图片空间', '如果勾选，则只把图片文件上传到UPYUN，其他文件上传到此服务器');
         $form->addInput($c1);
     }

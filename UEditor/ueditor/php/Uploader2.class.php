@@ -392,7 +392,7 @@ class Uploader
         
         if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
         {
-            $a['url'] = Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_url. $this->fullName;
+            $a['url'] = Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_url. $this->fullName. Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_suffix;
         }
         return $a;
     }
