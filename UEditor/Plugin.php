@@ -89,7 +89,7 @@ class UEditor_Plugin implements Typecho_Plugin_Interface
     {
         $options = Helper::options();
         $configJs = Typecho_Common::url('extending.php?panel=UEditor/ueditor/ueditor.config.js.php', $options->adminUrl);
-        $js = Typecho_Common::url('UEditor/ueditor/ueditor.all.js', $options->pluginUrl);
+        $js = Typecho_Common::url('UEditor/ueditor/ueditor.all.min.js', $options->pluginUrl);
 
         echo '<script type="text/javascript" src="'. $configJs. '"></script><script type="text/javascript" src="'. $js. '"></script>';
         echo '<script type="text/javascript">
