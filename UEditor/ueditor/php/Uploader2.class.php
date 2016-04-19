@@ -1,12 +1,11 @@
 <?php
 require_once '../../../../../config.inc.php';
 require 'upyun.class.php';
+
 /**
- * Created by JetBrains PhpStorm.
- * User: taoqili
- * Date: 12-7-18
- * Time: 上午11: 32
- * UEditor编辑器通用上传类
+ * Class Uploader
+ * Date: 2016-04-19
+ * Time: 00:19:16
  */
 class Uploader
 {
@@ -44,6 +43,9 @@ class Uploader
         "ERROR_UPYUN" => "上传到UPYUN错误"
     );
 
+    /** @var  bool 上传后是否删除本地冗余图片 */
+    private $delete_local_file;
+
     /**
      * 构造函数
      * @param string $fileField 表单名称
@@ -66,15 +68,26 @@ class Uploader
         $this->stateMap['ERROR_TYPE_NOT_ALLOWED'] = iconv('unicode', 'utf-8', $this->stateMap['ERROR_TYPE_NOT_ALLOWED']);
     }
 
-    private function upload2upyun($file, $fileName)
+    /**
+     * 上传文件到upyun
+     * @param $file 要上传的文件
+     * @param $fileName 远端upyun的文件名
+     * @return bool
+     */
+    private function upload_file_to_upyun($file, $fileName)
     {
-        // 上传到upyun
+        if( !file_exists($file) )
+        {
+            $this->stateInfo = $this->getStateInfo('ERROR_FILE_NOT_FOUND');
+            return false;
+        }
+
         $upyun = new UpYun(Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_bucket, Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_user, Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_password);
 
         try
         {
             $fn = fopen($file, 'rb');
-            $rsp = $upyun->writeFile($fileName, $fn, True);
+            $rsp = $upyun->writeFile($fileName, $fn, true);
             fclose($fn);
 
             if( $rsp )
@@ -89,7 +102,45 @@ class Uploader
         }
         catch (Exception $e)
         {
-            $this->stateInfo = $this->getCode();
+            $this->stateInfo = $e->getCode();
+            return false;
+        }
+
+        // 是否删除本地冗余图片文件
+        if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_only )
+        {
+            unlink($file);
+        }
+    }
+
+
+    private function upload_content_to_upyun($content, $filename)
+    {
+        if( !$content )
+        {
+            $this->stateInfo = $this->getStateInfo('ERROR_FILE_NOT_FOUND');
+            return false;
+        }
+
+        $upyun = new UpYun(Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_bucket, Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_user, Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_password);
+
+        try
+        {
+            $rsp = $upyun->writeFile($filename, $content, true);
+
+            if( $rsp )
+            {
+                $this->stateInfo = $this->stateMap[0];
+            }
+            else
+            {
+                $this->stateInfo = $this->getStateInfo("ERROR_UPYUN");
+                return false;
+            }
+        }
+        catch(Exception $e)
+        {
+            $this->stateInfo = $e->getCode();
             return false;
         }
     }
@@ -138,25 +189,39 @@ class Uploader
 
         // 创建目录失败
         if (!file_exists($dirname) && !mkdir($dirname, 0777, true)) {
-            $this->stateInfo = $this->getStateInfo("ERROR_CREATE_DIR");
-            return;
+            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            {
+                $this->stateInfo = $this->getStateInfo("ERROR_CREATE_DIR");
+                return false;
+            }
         } else if (!is_writeable($dirname)) {
-            $this->stateInfo = $this->getStateInfo("ERROR_DIR_NOT_WRITEABLE");
-            return;
+            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            {
+                $this->stateInfo = $this->getStateInfo("ERROR_DIR_NOT_WRITEABLE");
+                return false;
+            }
         }
 
         // 移动文件
         if (!(move_uploaded_file($file["tmp_name"], $this->filePath) && file_exists($this->filePath))) { //移动失败
-            $this->stateInfo = $this->getStateInfo("ERROR_FILE_MOVE");
-
-            return ;
+            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            {
+                $my_file = $file['tmp_name'];
+            }
+            else
+            {
+                $this->stateInfo = $this->getStateInfo("ERROR_FILE_MOVE");
+                return false;
+            }
         } else { //移动成功
-            $this->stateInfo = $this->stateMap[0];
-        }
-
-        if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
-        {
-            $this->upload2upyun($this->filePath, $this->fullName);
+            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            {
+                $this->upload_file_to_upyun($this->filePath, $this->fullName);
+            }
+            else
+            {
+                $this->stateInfo = $this->stateMap[0];
+            }
         }
     }
 
@@ -185,23 +250,40 @@ class Uploader
 
         //创建目录失败
         if (!file_exists($dirname) && !mkdir($dirname, 0777, true)) {
-            $this->stateInfo = $this->getStateInfo("ERROR_CREATE_DIR");
-            return;
+            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            {
+                $this->stateInfo = $this->getStateInfo("ERROR_CREATE_DIR");
+                return false;
+            }
         } else if (!is_writeable($dirname)) {
-            $this->stateInfo = $this->getStateInfo("ERROR_DIR_NOT_WRITEABLE");
-            return;
+            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            {
+                $this->stateInfo = $this->getStateInfo("ERROR_DIR_NOT_WRITEABLE");
+                return false;
+            }
         }
 
         //移动文件
         if (!(file_put_contents($this->filePath, $img) && file_exists($this->filePath))) { //移动失败
-            $this->stateInfo = $this->getStateInfo("ERROR_WRITE_CONTENT");
-        } else { //移动成功
-            $this->stateInfo = $this->stateMap[0];
-        }
+            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            {
+                $this->upload_content_to_upyun($img, $this->fullName);
+            }
+            else
+            {
 
-        if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
-        {
-            $this->upload2upyun($this->filePath, $this->fullName);
+                $this->stateInfo = $this->getStateInfo("ERROR_WRITE_CONTENT");
+                return false;
+            }
+        } else { //移动成功
+            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            {
+                $this->upload_file_to_upyun($this->filePath, $this->fullName);
+            }
+            else
+            {
+                $this->stateInfo = $this->stateMap[0];
+            }
         }
     }
 
@@ -260,23 +342,40 @@ class Uploader
 
         //创建目录失败
         if (!file_exists($dirname) && !mkdir($dirname, 0777, true)) {
-            $this->stateInfo = $this->getStateInfo("ERROR_CREATE_DIR");
-            return;
+            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            {
+                $this->stateInfo = $this->getStateInfo("ERROR_CREATE_DIR");
+                return false;
+            }
         } else if (!is_writeable($dirname)) {
-            $this->stateInfo = $this->getStateInfo("ERROR_DIR_NOT_WRITEABLE");
-            return;
+            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            {
+                $this->stateInfo = $this->getStateInfo("ERROR_DIR_NOT_WRITEABLE");
+                return false;
+            }
         }
 
         //移动文件
         if (!(file_put_contents($this->filePath, $img) && file_exists($this->filePath))) { //移动失败
-            $this->stateInfo = $this->getStateInfo("ERROR_WRITE_CONTENT");
-        } else { //移动成功
-            $this->stateInfo = $this->stateMap[0];
-        }
+            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            {
+                $this->upload_content_to_upyun($img, $this->fullName);
+            }
+            else
+            {
 
-        if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
-        {
-            $this->upload2upyun($this->filePath, $this->fullName);
+                $this->stateInfo = $this->getStateInfo("ERROR_WRITE_CONTENT");
+                return false;
+            }
+        } else { //移动成功
+            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            {
+                $this->upload_file_to_upyun($this->filePath, $this->fullName);
+            }
+            else
+            {
+                $this->stateInfo = $this->stateMap[0];
+            }
         }
     }
 
@@ -389,7 +488,7 @@ class Uploader
             "type" => $this->fileType,
             "size" => $this->fileSize
         );
-        
+
         if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
         {
             $a['url'] = Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_url. $this->fullName. Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_suffix;

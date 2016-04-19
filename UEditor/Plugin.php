@@ -1,12 +1,13 @@
 <?php
 /**
  * 为Typecho启用UEditor编辑器(UPYUN版本)
- * 
+ *
  * @package UEditor
  * @author 陈盛智
  * @version 1.4.3.2
  * @link http://chenshengzhi.com
- * @date 2014-9-14 22:26:55
+ * Date: 2016-04-19
+ * Time: 00:08:36
  */
 class UEditor_Plugin implements Typecho_Plugin_Interface
 {
@@ -47,7 +48,7 @@ class UEditor_Plugin implements Typecho_Plugin_Interface
      */
     public static function config(Typecho_Widget_Helper_Form $form){
         /** 使用UPYUN */
-        $c1 = new Typecho_Widget_Helper_Form_Element_Radio('upyun', array('0' => '不使用', '1' => '使用'), '0',
+        $c1 = new Typecho_Widget_Helper_Form_Element_Radio('upyun', array('0' => '不使用', '1' => '使用'), '1',
             '是否使用UPYUN', '开启后会把图片和文件上传到UPYUN服务器上');
         $form->addInput($c1);
 
@@ -66,7 +67,7 @@ class UEditor_Plugin implements Typecho_Plugin_Interface
         $c1 = new Typecho_Widget_Helper_Form_Element_Text('upyun_suffix', NULL, NULL, '缩略图版本', '在图片地址后添加的内容,例如 !default');
         $form->addInput($c1);
 
-        $c1 = new Typecho_Widget_Helper_Form_Element_Checkbox('upyun_is_image', array('upyun_is_image' => '这是一个图片空间'), array('upyun_is_image'), '是否图片空间', '如果勾选，则只把图片文件上传到UPYUN，其他文件上传到此服务器');
+        $c1 = new Typecho_Widget_Helper_Form_Element_Checkbox('upyun_only', array('upyun_only' => '图片上传到UPYUN后删除本服务器上对应的图片文件'), array(), '图片仅上传到UPYUN', '如果勾选，则把图片文件上传到UPYUN并删除本地服务器上对应的图片文件');
         $form->addInput($c1);
     }
     
