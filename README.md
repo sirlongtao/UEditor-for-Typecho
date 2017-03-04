@@ -31,6 +31,6 @@ UEditor-for-Typecho
 访问[https://github.com/chanshengzhi/UEditor-for-Typecho/releases](https://github.com/chanshengzhi/UEditor-for-Typecho/releases),下载所需版本的压缩包,上传UEditor文件夹到/usr/plugins文件夹下, 进入Typecho插件管理界面启用即可
 
 ##联系作者
-你可以在[陈盛智的个人站点](http://chenshengzhi.com)中找到我的联系方式.
+[陳盛智(chensz.com)](http://chensz.com)
 
 QQ群: 558310881
