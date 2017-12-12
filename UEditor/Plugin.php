@@ -53,7 +53,6 @@ class UEditor_Plugin implements Typecho_Plugin_Interface
                 '0' => '不使用',
                 'upyun' => '又拍云(upyun)',
                 'qcloud_cos' => '腾讯云COS',
-                'aliyun_oss' => '阿里云OSS',
             ),
             '0', '是否使用云服务器存储?', '开启后会把图片和文件上传到云服务器上');
         $form->addInput($c1);
