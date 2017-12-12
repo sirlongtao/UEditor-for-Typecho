@@ -524,7 +524,7 @@ UE.I18N['zh-cn'] = {
         'static':{
             'lang_input_about':'关于',
             'lang_input_shortcuts':'快捷键',
-            'lang_input_introduction':'UEditor for Typecho是为Typecho开发的编辑器插件,基于UEditor。已由开发者使用2年以上，稳定可靠。',
+            'lang_input_introduction':'UEditor for Typecho是为Typecho改造的编辑器插件,基于UEditor。始于2012年。',
             'lang_Txt_shortcuts':'快捷键',
             'lang_Txt_func':'功能',
             'lang_Txt_bold':'给选中字设置为加粗',

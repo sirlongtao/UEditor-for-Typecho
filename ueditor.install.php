@@ -4,7 +4,7 @@
  * (写于18岁后的第一个春节)
  * 
  * @author Shengzhi Chen
- * @link http://chenshengzhi.com
+ * @link http://chensz.com
  */
 
 

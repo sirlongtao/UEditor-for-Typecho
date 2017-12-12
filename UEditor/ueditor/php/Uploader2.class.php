@@ -1,6 +1,19 @@
 <?php
+// load typecho config file
 require_once '../../../../../config.inc.php';
-require 'upyun.class.php';
+
+switch( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud )
+{
+    case 'upyun':
+        define('CLOUD_UPYUN', 'upyun');
+        require 'upyun.class.php';
+        break;
+    case 'qcloud_cos':
+        define('CLOUD_QCLOUD_COS', 'qcloud_cos');
+        require './qcloud-cos/cos-autoloader.php';
+        break;
+}
+
 
 /**
  * Class Uploader
@@ -9,6 +22,8 @@ require 'upyun.class.php';
  */
 class Uploader
 {
+    private $cloud_file_url;
+
     private $fileField; //文件域名
     private $file; //文件上传对象
     private $base64; //文件上传对象
@@ -40,11 +55,9 @@ class Uploader
         "ERROR_DEAD_LINK" => "链接不可用",
         "ERROR_HTTP_LINK" => "链接不是http链接",
         "ERROR_HTTP_CONTENTTYPE" => "链接contentType不正确",
-        "ERROR_UPYUN" => "上传到UPYUN错误"
+        "ERROR_UPYUN" => "上传到UPYUN时发生错误",
+        "ERROR_QCLOUD_COS" => "上传到腾讯云COS时发生错误"
     );
-
-    /** @var  bool 上传后是否删除本地冗余图片 */
-    private $delete_local_file;
 
     /**
      * 构造函数
@@ -66,29 +79,128 @@ class Uploader
         }
 
         $this->stateMap['ERROR_TYPE_NOT_ALLOWED'] = iconv('unicode', 'utf-8', $this->stateMap['ERROR_TYPE_NOT_ALLOWED']);
+
     }
 
     /**
-     * 上传文件到upyun
-     * @param $file 要上传的文件
-     * @param $fileName 远端upyun的文件名
-     * @return bool
+     * 根据配置上传文件到特定的云服务器
+     *
+     * @param      $file     要上传的文件
+     * @param      $fileName 云服务器上的file path
+     * @param bool $this_is_file 是文件或者内容?true为文件,false为内容,默认true
+     * @throws Typecho_Widget_Exception
      */
-    private function upload_file_to_upyun($file, $fileName)
+    private function upload_to_cloud($file, $fileName, $this_is_file = true)
     {
-        if( !file_exists($file) )
+        switch( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud )
+        {
+            case CLOUD_UPYUN:
+                $this->upload_to_upyun($file, $fileName, $this_is_file);
+                break;
+            case CLOUD_QCLOUD_COS:
+                $this->upload_file_to_qcloud_cos($file, $fileName, $this_is_file);
+                break;
+        }
+        // 是否删除本地冗余图片文件
+        if( $this_is_file && Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_only )
+        {
+            unlink($file);
+        }
+    }
+
+    /**
+     * 上传文件到腾讯云COS
+     *
+     * @param      $file     要上传的文件
+     * @param      $fileName 云服务器上的file path
+     * @param bool $this_is_file 是文件或者内容?true为文件,false为内容,默认true
+     * @return bool
+     * @throws Typecho_Widget_Exception
+     */
+    private function upload_file_to_qcloud_cos($file, $fileName,$this_is_file = true)
+    {
+        if($this_is_file && !file_exists($file) )
         {
             $this->stateInfo = $this->getStateInfo('ERROR_FILE_NOT_FOUND');
             return false;
         }
 
-        $upyun = new UpYun(Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_bucket, Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_user, Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_password);
+        $cosClient = new Qcloud\Cos\Client(array('region' => Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_qcloud_region,
+                                                 'credentials'=> array(
+                                                     'appId' => Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_qcloud_appid,
+                                                     'secretId'    => Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_user,
+                                                     'secretKey' => Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_password)));
+        try
+        {
+            if( $this_is_file )
+            {
+                ob_start();
+                $_fp = fopen($file, 'rb');
+                $result = $cosClient->upload(Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_bucket, $fileName, $_fp);
+                fclose($_fp);
+                ob_end_clean();
+            }
+            else
+            {
+                ob_start();
+                $result = $cosClient->upload(Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_bucket, $fileName, $file);
+                ob_end_clean();
+            }
+
+            if( $result )
+            {
+//                $this->url = str_replace('%2F', '/', $result['ObjectURL']);
+                $this->stateInfo = $this->stateMap[0];
+            }
+            else
+            {
+                $this->stateInfo = $this->getStateInfo("ERROR_QCLOUD_COS");
+                return false;
+            }
+        }
+        catch (\Exception $e1)
+        {
+            $this->stateInfo = $e1->getCode();
+            return false;
+        }
+        catch (Exception $e)
+        {
+            $this->stateInfo = $e->getCode();
+            return false;
+        }
+    }
+
+    /**
+     * 上传内容或文件到upyun
+     *
+     * @param      $file     要上传的文件
+     * @param      $fileName 云服务器上的file path
+     * @param bool $this_is_file $file是文件或者内容?true为文件,false为内容,默认true
+     * @return bool
+     * @throws Typecho_Widget_Exception
+     */
+    private function upload_to_upyun($file, $fileName, $this_is_file = true)
+    {
+        if( $this_is_file && !file_exists($file) )
+        {
+            $this->stateInfo = $this->getStateInfo('ERROR_FILE_NOT_FOUND');
+            return false;
+        }
+
+        $upyun = new UpYun(Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_bucket, Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_user, Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_password);
 
         try
         {
-            $fn = fopen($file, 'rb');
-            $rsp = $upyun->writeFile($fileName, $fn, true);
-            fclose($fn);
+            if( $this_is_file )
+            {
+                $_fp = fopen($file, 'rb');
+                $rsp = $upyun->writeFile($fileName, $_fp, true);
+                fclose($_fp);
+            }
+            else
+            {
+                $rsp = $upyun->writeFile($fileName, $file, true);
+            }
 
             if( $rsp )
             {
@@ -101,44 +213,6 @@ class Uploader
             }
         }
         catch (Exception $e)
-        {
-            $this->stateInfo = $e->getCode();
-            return false;
-        }
-
-        // 是否删除本地冗余图片文件
-        if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_only )
-        {
-            unlink($file);
-        }
-    }
-
-
-    private function upload_content_to_upyun($content, $filename)
-    {
-        if( !$content )
-        {
-            $this->stateInfo = $this->getStateInfo('ERROR_FILE_NOT_FOUND');
-            return false;
-        }
-
-        $upyun = new UpYun(Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_bucket, Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_user, Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_password);
-
-        try
-        {
-            $rsp = $upyun->writeFile($filename, $content, true);
-
-            if( $rsp )
-            {
-                $this->stateInfo = $this->stateMap[0];
-            }
-            else
-            {
-                $this->stateInfo = $this->getStateInfo("ERROR_UPYUN");
-                return false;
-            }
-        }
-        catch(Exception $e)
         {
             $this->stateInfo = $e->getCode();
             return false;
@@ -189,13 +263,13 @@ class Uploader
 
         // 创建目录失败
         if (!file_exists($dirname) && !mkdir($dirname, 0777, true)) {
-            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud )
             {
                 $this->stateInfo = $this->getStateInfo("ERROR_CREATE_DIR");
                 return false;
             }
         } else if (!is_writeable($dirname)) {
-            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud )
             {
                 $this->stateInfo = $this->getStateInfo("ERROR_DIR_NOT_WRITEABLE");
                 return false;
@@ -204,9 +278,9 @@ class Uploader
 
         // 移动文件
         if (!(move_uploaded_file($file["tmp_name"], $this->filePath) && file_exists($this->filePath))) { //移动失败
-            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud )
             {
-                $my_file = $file['tmp_name'];
+                $this->upload_to_cloud($file['tmp_name'], $this->fullName);
             }
             else
             {
@@ -214,9 +288,9 @@ class Uploader
                 return false;
             }
         } else { //移动成功
-            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud)
             {
-                $this->upload_file_to_upyun($this->filePath, $this->fullName);
+                $this->upload_to_cloud($this->filePath, $this->fullName);
             }
             else
             {
@@ -250,13 +324,13 @@ class Uploader
 
         //创建目录失败
         if (!file_exists($dirname) && !mkdir($dirname, 0777, true)) {
-            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud )
             {
                 $this->stateInfo = $this->getStateInfo("ERROR_CREATE_DIR");
                 return false;
             }
         } else if (!is_writeable($dirname)) {
-            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud )
             {
                 $this->stateInfo = $this->getStateInfo("ERROR_DIR_NOT_WRITEABLE");
                 return false;
@@ -265,9 +339,9 @@ class Uploader
 
         //移动文件
         if (!(file_put_contents($this->filePath, $img) && file_exists($this->filePath))) { //移动失败
-            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud )
             {
-                $this->upload_content_to_upyun($img, $this->fullName);
+                $this->upload_to_cloud($img, $this->fullName, false);
             }
             else
             {
@@ -276,9 +350,9 @@ class Uploader
                 return false;
             }
         } else { //移动成功
-            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud )
             {
-                $this->upload_file_to_upyun($this->filePath, $this->fullName);
+                $this->upload_to_cloud($this->filePath, $this->fullName);
             }
             else
             {
@@ -342,13 +416,13 @@ class Uploader
 
         //创建目录失败
         if (!file_exists($dirname) && !mkdir($dirname, 0777, true)) {
-            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud )
             {
                 $this->stateInfo = $this->getStateInfo("ERROR_CREATE_DIR");
                 return false;
             }
         } else if (!is_writeable($dirname)) {
-            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            if( !Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud )
             {
                 $this->stateInfo = $this->getStateInfo("ERROR_DIR_NOT_WRITEABLE");
                 return false;
@@ -357,7 +431,7 @@ class Uploader
 
         //移动文件
         if (!(file_put_contents($this->filePath, $img) && file_exists($this->filePath))) { //移动失败
-            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud )
             {
                 $this->upload_content_to_upyun($img, $this->fullName);
             }
@@ -368,9 +442,9 @@ class Uploader
                 return false;
             }
         } else { //移动成功
-            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+            if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud )
             {
-                $this->upload_file_to_upyun($this->filePath, $this->fullName);
+                $this->upload_to_upyun($this->filePath, $this->fullName);
             }
             else
             {
@@ -489,9 +563,17 @@ class Uploader
             "size" => $this->fileSize
         );
 
-        if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun )
+        if( Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud )
         {
-            $a['url'] = Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_url. $this->fullName. Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->upyun_suffix;
+            if( defined('CLOUD_QCLOUD_COS') )
+            {
+//                $a['url'] = $this->url. Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_suffix;
+                $a['url'] = Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_url. '/'.  Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_bucket. '/'. $this->fullName. Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_suffix;
+            }
+            else
+            {
+                $a['url'] = Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_url. $this->fullName. Typecho_Widget::widget('Widget_Options')->plugin('UEditor')->cloud_suffix;
+            }
         }
         return $a;
     }

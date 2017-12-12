@@ -1,13 +1,13 @@
 <?php
 /**
- * 为Typecho启用UEditor编辑器(UPYUN版本)
+ * 为Typecho启用UEditor编辑器(支持云存储)
  *
- * @package UEditor
+ * @package UEditor for Typecho
  * @author 陈盛智
- * @version 1.4.3.2
- * @link http://chenshengzhi.com
- * Date: 2016-04-19
- * Time: 00:08:36
+ * @version 2017.12
+ * @link http://chensz.com
+ * Date: 2017-12-8
+ * Time: 19:26:40
  */
 class UEditor_Plugin implements Typecho_Plugin_Interface
 {
@@ -48,26 +48,38 @@ class UEditor_Plugin implements Typecho_Plugin_Interface
      */
     public static function config(Typecho_Widget_Helper_Form $form){
         /** 使用UPYUN */
-        $c1 = new Typecho_Widget_Helper_Form_Element_Radio('upyun', array('0' => '不使用', '1' => '使用'), '1',
-            '是否使用UPYUN', '开启后会把图片和文件上传到UPYUN服务器上');
+        $c1 = new Typecho_Widget_Helper_Form_Element_Radio('cloud',
+            array(
+                '0' => '不使用',
+                'upyun' => '又拍云(upyun)',
+                'qcloud_cos' => '腾讯云COS',
+                'aliyun_oss' => '阿里云OSS',
+            ),
+            '0', '是否使用云服务器存储?', '开启后会把图片和文件上传到云服务器上');
         $form->addInput($c1);
 
-        $c1 = new Typecho_Widget_Helper_Form_Element_Text('upyun_url', NULL, NULL, '空间地址', '大概是这样的:http://bucket.b0.upaiyun.com');
+        $c1 = new Typecho_Widget_Helper_Form_Element_Checkbox('cloud_only', array('cloud_only' => '图片上传到云服务器后删除本服务器上对应的文件'), array(), '图片仅上传到云服务器', '如果勾选，则把图片文件上传到云服务器并删除本地服务器上对应的文件');
+        $form->addInput($c1);
+
+        $c1 = new Typecho_Widget_Helper_Form_Element_Text('cloud_url', NULL, NULL, '空间域名', '大概是这样的:http://bucket.b0.upaiyun.com, 或使用绑定的域名,这是访问你上传文件的域名');
         $form->addInput($c1);
         
-        $c1 = new Typecho_Widget_Helper_Form_Element_Text('upyun_bucket', NULL, NULL, '空间名称', '例如bucket');
+        $c1 = new Typecho_Widget_Helper_Form_Element_Text('cloud_bucket', NULL, NULL, '空间名称', '例如bucket');
         $form->addInput($c1);
 
-        $c1 = new Typecho_Widget_Helper_Form_Element_Text('upyun_user', NULL, NULL, '操作员', '操作员名称');
+        $c1 = new Typecho_Widget_Helper_Form_Element_Text('cloud_user', NULL, NULL, '操作员', '对应的bucket写入权限的账号(操作员/secretId/AccessKeyId)');
         $form->addInput($c1);
 
-        $c1 = new Typecho_Widget_Helper_Form_Element_Password('upyun_password', NULL, NULL, '操作员密码', '小心站你后面的物体');
+        $c1 = new Typecho_Widget_Helper_Form_Element_Password('cloud_password', NULL, NULL, '密码', '对应的正确的密码(操作员密码/secretKey/AccessKeySecret)');
         $form->addInput($c1);
 
-        $c1 = new Typecho_Widget_Helper_Form_Element_Text('upyun_suffix', NULL, NULL, '缩略图版本', '在图片地址后添加的内容,例如 !default');
+        $c1 = new Typecho_Widget_Helper_Form_Element_Password('cloud_qcloud_appid', NULL, NULL, 'appid', '腾讯云COS的appid');
         $form->addInput($c1);
 
-        $c1 = new Typecho_Widget_Helper_Form_Element_Checkbox('upyun_only', array('upyun_only' => '图片上传到UPYUN后删除本服务器上对应的图片文件'), array(), '图片仅上传到UPYUN', '如果勾选，则把图片文件上传到UPYUN并删除本地服务器上对应的图片文件');
+        $c1 = new Typecho_Widget_Helper_Form_Element_Text('cloud_qcloud_region', NULL, NULL, '腾讯云COS地域简称代码', '腾讯云COS的地域简称代码,其值可以为下列之一:cn-east, cn-sorth, cn-north, cn-south-2, cn-southwest, sg, tj, bj, sh, gz, cd, sgp, ap-guangzhou等');
+        $form->addInput($c1);
+
+        $c1 = new Typecho_Widget_Helper_Form_Element_Text('cloud_suffix', NULL, NULL, '缩略图版本', '在文件URL后添加的内容,upyun用户常用功能,例如 !default');
         $form->addInput($c1);
     }
     
