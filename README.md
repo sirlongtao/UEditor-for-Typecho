@@ -3,7 +3,7 @@ UEditor-for-Typecho
 
 2017-12-31 updated
 
-适用于Typecho 1.0/0.9/0.8等版本, UEditor内核已升级到1.4.3.2版本.
+适用于Typecho 1.0/0.9/0.8等版本, UEditor内核已升级到1.4.3.3版本.
 
 - 支持**又拍云存储**(upyun), 支持UPYUN的缩略图版本
 - 支持**腾讯云对象存储**(COS)
