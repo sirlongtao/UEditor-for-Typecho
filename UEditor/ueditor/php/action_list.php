@@ -7,20 +7,23 @@
  */
 include "Uploader2.class.php";
 
+$sitePath = substr( __TYPECHO_ROOT_DIR__, strlen($_SERVER['DOCUMENT_ROOT']))."/";
+$sitePath = '/'. ltrim($sitePath, "\\");
+
 /* 判断类型 */
 switch ($_GET['action']) {
     /* 列出文件 */
     case 'listfile':
         $allowFiles = $CONFIG['fileManagerAllowFiles'];
         $listSize = $CONFIG['fileManagerListSize'];
-        $path = $CONFIG['fileManagerListPath'];
+        $path = $sitePath. $CONFIG['fileManagerListPath'];
         break;
     /* 列出图片 */
     case 'listimage':
     default:
         $allowFiles = $CONFIG['imageManagerAllowFiles'];
         $listSize = $CONFIG['imageManagerListSize'];
-        $path = $CONFIG['imageManagerListPath'];
+        $path = $sitePath. $CONFIG['imageManagerListPath'];
 }
 $allowFiles = substr(str_replace(".", "|", join("", $allowFiles)), 1);
 

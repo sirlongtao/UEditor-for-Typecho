@@ -4,10 +4,10 @@
  *
  * @package UEditor for Typecho
  * @author 陈盛智
- * @version 2017.12
+ * @version 2018
  * @link http://chensz.com
- * Date: 2017-12-8
- * Time: 19:26:40
+ * Date: 2017-12-31
+ * Time: 03:50:05
  */
 class UEditor_Plugin implements Typecho_Plugin_Interface
 {

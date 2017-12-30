@@ -7,12 +7,15 @@
  */
 include "Uploader2.class.php";
 
+$sitePath = substr( __TYPECHO_ROOT_DIR__, strlen($_SERVER['DOCUMENT_ROOT'])). '/';
+$sitePath = '/'. ltrim($sitePath, "\\");
+
 /* 上传配置 */
 $base64 = "upload";
 switch (htmlspecialchars($_GET['action'])) {
     case 'uploadimage':
         $config = array(
-            "pathFormat" => $CONFIG['imagePathFormat'],
+            "pathFormat" => $sitePath. $CONFIG['imagePathFormat'],
             "maxSize" => $CONFIG['imageMaxSize'],
             "allowFiles" => $CONFIG['imageAllowFiles']
         );
@@ -20,7 +23,7 @@ switch (htmlspecialchars($_GET['action'])) {
         break;
     case 'uploadscrawl':
         $config = array(
-            "pathFormat" => $CONFIG['scrawlPathFormat'],
+            "pathFormat" => $sitePath. $CONFIG['scrawlPathFormat'],
             "maxSize" => $CONFIG['scrawlMaxSize'],
             "allowFiles" => $CONFIG['scrawlAllowFiles'],
             "oriName" => "scrawl.png"
@@ -30,7 +33,7 @@ switch (htmlspecialchars($_GET['action'])) {
         break;
     case 'uploadvideo':
         $config = array(
-            "pathFormat" => $CONFIG['videoPathFormat'],
+            "pathFormat" => $sitePath. $CONFIG['videoPathFormat'],
             "maxSize" => $CONFIG['videoMaxSize'],
             "allowFiles" => $CONFIG['videoAllowFiles']
         );
@@ -39,7 +42,7 @@ switch (htmlspecialchars($_GET['action'])) {
     case 'uploadfile':
     default:
         $config = array(
-            "pathFormat" => $CONFIG['filePathFormat'],
+            "pathFormat" => $sitePath. $CONFIG['filePathFormat'],
             "maxSize" => $CONFIG['fileMaxSize'],
             "allowFiles" => $CONFIG['fileAllowFiles']
         );
